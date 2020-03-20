@@ -9,14 +9,10 @@ Helpful links:
     https://stackoverflow.com/questions/3021641/concatenation-of-many-lists-in-python
     https://stackoverflow.com/questions/38604805/convert-list-into-list-of-lists
 """
-
-
 import os
 from time import time as t
 from time import ctime
 import json
-
-tester = os.path.join(os.path.dirname(__file__))
 
 def return_files(directory):
     '''
@@ -41,67 +37,61 @@ def return_files(directory):
     
     return sum([sub_dir[2] for sub_dir in d ], [])
 
-def print_time(value, preamble = 'Elapsed time'): 
-    print(preamble + ': ' + str(round(t()-value,1)) + ' seconds')
 
-backup_path = '//Isi/ida/Divisions/SFRD/Public/PII Data Curation/PII Data Curation/'
-repo_path = '//Isi/ida/Projects/PII Data Curation/'
+def print_time(value, preamble = 'Elapsed time'):
+    from time import time as t
+    f = t() - value
+    unit = 'seconds'
+    if f > 60:
+        f = round(f/60)
+        unit = 'minutes'
+        print(preamble + ': ' + str(god_time) + ' ' + unit )
 
 god_time = t()
-
+repo_path = '//Isi/ida/Projects/PII Data Curation/'
+backup_path = os.path.join(os.path.dirname(__file__)).replace('repository_compare','')
 
 print('Reading in all sub-directories...')
 start = t()
 print('Exploring all sub-directories of the backup folder...')
 backup_dir = list(os.walk(backup_path))
-print_time(start, 'Complete. Elapsed time: ')
+print_time(start, 'Complete. Elapsed time')
 
 start = t()
-print('Exploring all sub-directories of the repository folder, excluding the '+
+print('\nExploring all sub-directories of the repository folder, excluding the '+
       '"Python VirtualEnv" sub-folder and all its contents...')
 
-# save time by omitting high-level directory from subsequent directory walk path
+# save time by excluding high-level directory from subsequent directory walk path
 exclude = [i for i in os.listdir(repo_path) if i not in os.listdir(backup_path)]
 repo_dir = []
 for root, dirs, files in os.walk(repo_path):
-    dirs[:] = [d for d in dirs if d not in 'Python VirtualEnv' or d not in exclude] # exclude the Python VirtualEnv folder
+    # exclude "Python VirtualEnv" sub-dir, which has 67,631 Files under 8,578 Folders
+    dirs[:] = [d for d in dirs if d not in exclude and 'Python VirtualEnv' not in d and '] 
     repo_dir.append( tuple([root,dirs,files]))
-print_time(start)
-# note to self: Python VirtualEnv folder has 67,631 Files, 8,578 Folders
 
 
 repo_dir = return_files(repo_dir)
 backup_dir = return_files(backup_dir)
+print_time(start,'Complete. Elapsed time')
 
+print('\nComparing similar files between repository and backup directory...')
+start = t()
 same = [file for file in repo_dir if file.replace(repo_path, backup_path) in backup_dir ]
 modified = []
 added = [file for file in repo_dir if file not in same]
 deleted = [file for file in backup_dir if file.replace(backup_path, repo_path) not in same]
 
-start = t()
+
 for file in same:
     repo_file = file
     backup_file = file.replace(repo_path, backup_path)
     if ctime(os.path.getmtime(repo_file)) > ctime(os.path.getmtime(backup_file)):
         modified.append(repo_file)
-print_time(start)
+print_time(start,'Complete. Elapsed time')
+print_time(god_time,'Total run-time')
 
-
-
-
-print_time(god_time,'Total time: ')
-
-print('Changed or edited files: ')
-[print(file) for file in modified]
-print('\nDeleted files: ')
-[print(file) for file in deleted]
-print('\nAdded files: ')
-s = [print(file) for file in added]
-
-files = {'modified': modified, 'deleted': deleted, 'added':added}
-with open(backup_path + 'files.tx', 'w') as outfile:
-    json.dump(files, outfile)
-
+with open(backup_path + 'files.json', 'w') as outfile:
+    json.dump({'modified': modified, 'deleted': deleted, 'added':added}, outfile)
 
 
 
