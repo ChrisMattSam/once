@@ -14,3 +14,9 @@ Scripts: generate_synth_data, generation_fxns
 
 The objective is to generate a synthetic population from a non-disclosable dataset primarily using R's synthpop package after formatting the dataset and encoding one feature.
 Leaned heavily on R's synthpop package (see: https://cran.r-project.org/web/packages/synthpop/vignettes/synthpop.pdf) with some modifications.
+
+Date: 3/23/2020
+Scripts: directory_compare/
+
+The objective of this file is to compare files between any two directories dir_A and dir_B, returning a .json of files that have been added to dir_A and not dir_B ('added'),
+added to dir_B but not dir_A ('deleted'), or have been modified in dir_A and not dir_B ('modified'). 
