@@ -1,3 +1,4 @@
+#! /usr/bin/Python
 # -*- coding: utf-8 -*-
 """
 Created on Wed Mar 18 10:18:55 2020
@@ -13,6 +14,14 @@ import os
 from time import time as t
 from time import ctime
 import json
+import inspect
+
+'''
+Without the two lines below, print functions are held until the end of execution, and
+will not print at all if there is any error
+'''
+from functools import partial
+print = partial(print, flush=True) 
 
 def return_files(directory):
     '''
@@ -43,15 +52,18 @@ def print_time(value, preamble = 'Elapsed time'):
     f = t() - value
     unit = 'seconds'
     if f > 60:
-        f = round(f/60)
+        f = f/60
         unit = 'minutes'
-        print(preamble + ': ' + str(god_time) + ' ' + unit )
+    print(preamble + ': ' + str(round(f)) + ' ' + unit )
 
 god_time = t()
 repo_path = '//Isi/ida/Projects/PII Data Curation/'
-backup_path = os.path.join(os.path.dirname(__file__)).replace('repository_compare','')
 
-print('Reading in all sub-directories...')
+f = inspect.getframeinfo(inspect.currentframe()).filename
+backup_path = os.path.dirname(os.path.abspath(f)).replace('repository_compare','')
+backup_path = backup_path.replace('\\','/')
+
+print('Reading in all sub-directories')
 start = t()
 print('Exploring all sub-directories of the backup folder...')
 backup_dir = list(os.walk(backup_path))
@@ -66,7 +78,7 @@ exclude = [i for i in os.listdir(repo_path) if i not in os.listdir(backup_path)]
 repo_dir = []
 for root, dirs, files in os.walk(repo_path):
     # exclude "Python VirtualEnv" sub-dir, which has 67,631 Files under 8,578 Folders
-    dirs[:] = [d for d in dirs if d not in exclude and 'Python VirtualEnv' not in d and '] 
+    dirs[:] = [d for d in dirs if d not in exclude and 'Python VirtualEnv' not in d] 
     repo_dir.append( tuple([root,dirs,files]))
 
 
@@ -79,8 +91,8 @@ start = t()
 same = [file for file in repo_dir if file.replace(repo_path, backup_path) in backup_dir ]
 modified = []
 added = [file for file in repo_dir if file not in same]
-deleted = [file for file in backup_dir if file.replace(backup_path, repo_path) not in same]
-
+deleted = [file for file in backup_dir if file.replace(backup_path, repo_path) not 
+           in same and 'repository_compare' not in file]
 
 for file in same:
     repo_file = file
@@ -88,10 +100,8 @@ for file in same:
     if ctime(os.path.getmtime(repo_file)) > ctime(os.path.getmtime(backup_file)):
         modified.append(repo_file)
 print_time(start,'Complete. Elapsed time')
-print_time(god_time,'Total run-time')
+print_time(god_time + 1,'Total run-time')
 
-with open(backup_path + 'files.json', 'w') as outfile:
+with open(backup_path + 'repository_compare/files.json', 'w') as outfile:
     json.dump({'modified': modified, 'deleted': deleted, 'added':added}, outfile)
-
-
-
+    
