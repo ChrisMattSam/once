@@ -1,7 +1,7 @@
 #!/bin/bash
 echo -ne "\033]11;#002266\007"
 ### Parameters for script to be passed to Python ###
-script='directory_compare.py' # Name of general python script
+script='compare_directories.py' # Name of general python script
 dataset=${PWD##*/}
 user=$(whoami)
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
